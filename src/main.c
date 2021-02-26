@@ -304,7 +304,7 @@ int infx(FILE *source, FILE *dest) {
 
         /* done when inflate() says it's done */
     } while (ret != Z_STREAM_END);
-
+	printf("Code %d  LEFT: %d\n", ret == Z_STREAM_END, strm.avail_in);
     /* clean up and return */
     (void)inflateEnd(&strm);
     return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
@@ -348,7 +348,7 @@ int defx2(FILE *source, FILE *dest)
             }
         assert(strm.avail_in == 0);     /* all input will be used */
 
-
+	printf("Emma DONEOK!\n");
     /* clean up and return */
     (void)deflateEnd(&strm);
     return Z_OK;
@@ -390,6 +390,7 @@ int defx(FILE *source, FILE *dest)
             have = CHUNK - strm.avail_out;
             if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
                 (void)deflateEnd(&strm);
+		printf("Error!\n");
                 return Z_ERRNO;
             }
         } while (strm.avail_out == 0);
@@ -398,10 +399,87 @@ int defx(FILE *source, FILE *dest)
         /* done when last data in file processed */
     } while (flush != Z_FINISH);
     assert(ret == Z_STREAM_END);        /* stream will be complete */
-
+    printf("Emma! OK\n");
     /* clean up and return */
     (void)deflateEnd(&strm);
     return Z_OK;
+}
+
+int infx_mod(FILE *source, FILE *dest) {
+    int ret;
+    unsigned have;
+    z_stream strm;
+    unsigned char in[CHUNK*2];
+    unsigned char out[CHUNK];
+    /* allocate inflate state */
+    printf("Here!\n");
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    strm.opaque = Z_NULL;
+    strm.avail_in = 0;
+    strm.next_in = Z_NULL;
+    ret = inflateInit(&strm);
+    if (ret != Z_OK)
+        return ret;
+
+    /* decompress until deflate stream ends or end of file */
+    do {
+	printf("Emma!\n");
+        if(strm.avail_in == 0){
+		strm.avail_in = fread(in, 1, CHUNK, source);
+		have = 0;
+	}
+	printf("Read in %d\n", strm.avail_in);
+        if (ferror(source)) {
+            (void)inflateEnd(&strm);
+            return Z_ERRNO;
+        }
+        if (strm.avail_in == 0)
+            break;
+        strm.next_in = in;
+
+        /* run inflate() on input until output buffer not full */
+        do {
+		printf("HERE!!!\n");
+            strm.avail_out = CHUNK;
+            strm.next_out = out;
+            ret = inflate(&strm, Z_NO_FLUSH);
+            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+            switch (ret) {
+            case Z_NEED_DICT:
+                ret = Z_DATA_ERROR;     /* and fall through */
+            case Z_DATA_ERROR:
+            case Z_MEM_ERROR:
+                (void)inflateEnd(&strm);
+                return ret;
+            }
+            have = CHUNK - strm.avail_out;
+            if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
+                (void)inflateEnd(&strm);
+                return Z_ERRNO;
+            }
+
+	    if(ret == Z_STREAM_END) {
+		int left = strm.avail_in;
+		unsigned char* in_p = strm.next_in;
+		(void)inflateEnd(&strm);
+		strm.zalloc = Z_NULL;
+		strm.zfree = Z_NULL;
+		strm.opaque = Z_NULL;
+		strm.avail_in = left;
+		strm.next_in = in_p;
+		printf("In offset: %d left to read: %d\n", (int)(in_p - in), strm.avail_in);
+		ret = inflateInit(&strm);
+	    }
+
+        } while (strm.avail_out == 0 || strm.avail_in != 0);
+
+        /* done when inflate() says it's done */
+    } while (ret != Z_STREAM_END || strm.avail_in != 0);
+	printf("Code %d  LEFT: %d\n", ret == Z_STREAM_END, strm.avail_in);
+    /* clean up and return */
+    (void)inflateEnd(&strm);
+    return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 
 int main(int argc, char** argv) {
@@ -410,15 +488,16 @@ int main(int argc, char** argv) {
 	//emma("test_data.txt", "comp.zl", 2);
 
 	/*FILE* fp, *fpo;
-	fp = fopen("test_data.txt", "r");
+	fp = fopen("test2.txt", "r");//"test_data.txt"
 	fpo = fopen("output.txt", "w");
 	defx2(fp, fpo);*/
 
 	FILE* fp, *fpo;
 	fp = fopen("output.txt", "r");
 	fpo = fopen("output.txt.uc", "w");
-	infx(fp, fpo);
-	// infx(fp, fpo);
+	infx_mod(fp, fpo);
+	//infx(fp, fpo);
+	//infx(fp, fpo);
 
 	
 
