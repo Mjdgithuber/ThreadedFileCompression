@@ -21,22 +21,9 @@ typedef unsigned char BYTE;
 
 /* Protos */
 int def(BYTE* buffer_in, unsigned int buff_in_sz, BYTE* buffer_out, unsigned int buff_out_sz, unsigned int* output_sz);
-int inf(BYTE* buffer_in, unsigned int buff_in_sz, BYTE* buffer_out, unsigned int buff_out_sz, unsigned int* output_sz);
-int fpeek(FILE *stream);
-long int file_size(FILE* fp);
 
 void* compression(void* comp_info);
 
-
-
-
-
-
-int fpeek(FILE *stream) {
-	int c = fgetc(stream);
-	ungetc(c, stream);
-	return c;
-}
 
 /* Compress bytes from buffer source to buffer dest.
  *    def() returns Z_OK on success, Z_MEM_ERROR if memory could not be
@@ -91,73 +78,6 @@ int def(BYTE* buffer_in, unsigned int buff_in_sz, BYTE* buffer_out, unsigned int
     return Z_OK;
 } 
 
-/* * Do a basic check to ensure block size is multiple of cachline
- * * Basic check to ensure that uncompressed size is >= than compressed space
- *
- *
- */
-int inf(BYTE* buffer_in, unsigned int buff_in_sz, BYTE* buffer_out, unsigned int buff_out_sz, unsigned int* output_sz)
-{
-
-// inf(ib, 208, ob, 1000, &sz);
-
-
-    int ret;
-    unsigned have;
-    z_stream strm;
-
-    /* allocate inflate state */
-    strm.zalloc = Z_NULL;
-    strm.zfree = Z_NULL;
-    strm.opaque = Z_NULL;
-    strm.avail_in = 0;
-    strm.next_in = Z_NULL;
-    ret = inflateInit(&strm);
-    if (ret != Z_OK)
-        return ret;
-
-    strm.avail_in = buff_in_sz;
-    strm.next_in  = buffer_in;
-
-    strm.avail_out = buff_out_sz;
-    strm.next_out  = buffer_out;
-    
-    ret = inflate(&strm, Z_NO_FLUSH);
-    switch (ret) {
-    case Z_NEED_DICT:
-	ret = Z_DATA_ERROR;     /* and fall through */
-    case Z_DATA_ERROR:
-    case Z_MEM_ERROR:
-    	(void)inflateEnd(&strm);
-        return ret;
-    }
-
-    have = buff_out_sz - strm.avail_out;
-    printf("Uncompressed Size: %d, Compressed Size: %d\n", have, buff_in_sz);
- 	
-    int i;
-    for(i = 0; i < 350; i++) {
-	printf("%c", buffer_out[i]);
-	}  
-	printf("\n");
-	
-	printf("strm.avail_in = %u\n", strm.avail_in);
-
-    /*printf("Have: %d, avaible out: %d, left: %d\n", have, strm.avail_out, strm.avail_in);*/
-    assert(strm.avail_in == 0);   
-    (*output_sz) = have;
-
-    (void)inflateEnd(&strm);
-    return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
-}
-
-long int file_size(FILE* fp) {
-	long int ret;
-	fseek(fp, 0, SEEK_END);
-	ret = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	return ret;
-}
 typedef struct {
 	pthread_t thread;
 	char alive; /* 0 - idle, 1 - running, 2 - need to be reset */
