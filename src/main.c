@@ -483,19 +483,47 @@ int infx_mod(FILE *source, FILE *dest) {
 }
 
 int main(int argc, char** argv) {
-	//char output_fn[100];
+	char output_fn[100];
 
-	//emma("loss_test.txt", "emma.zl", 2);
+	if(argc != 3 && argc != 4) {
+		printf("Must have 3 or 4 args! Examples:\n./prog -c file_to_compress #_of_threads\n./prog -d file_to_decompress.zl\n");
+		return 0;
+	}
+
+	strcpy(output_fn, argv[2]);
+	if(!strcmp(argv[1], "-c")) {
+		if(argc != 4) {
+			printf("Must supply # of threads as 4th arg!\n");
+			return 0;
+		}
+		strcat(output_fn, ".zl");
+		emma(argv[2], output_fn, atoi(argv[3]));
+	} else if(!strcmp(argv[1], "-d")) {
+		FILE* fp, *fpo;
+		strcat(output_fn, ".uc");
+		fp = fopen(argv[2], "r");
+		fpo = fopen(output_fn, "w");
+		infx_mod(fp, fpo);
+	} else {
+		printf("Second arg must be either -c or -d\n");
+		return 0;
+	}
+
+
+	//!strcmp(str, v_flags[i])
+
+	//emma("b_exe.test", "emma.zl", 2);
 
 	/*FILE* fp, *fpo;
 	fp = fopen("test2.txt", "r");//"test_data.txt"
 	fpo = fopen("output.txt", "w");
 	defx2(fp, fpo);*/
 
-	FILE* fp, *fpo;
+	/*FILE* fp, *fpo;
 	fp = fopen("emma.zl", "r");
-	fpo = fopen("__test.c", "w");
-	infx_mod(fp, fpo);
+	fpo = fopen("__test.w", "w");
+	infx_mod(fp, fpo);*/
+
 	//infx(fp, fpo);
 	//infx(fp, fpo);
 
