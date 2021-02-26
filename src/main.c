@@ -485,7 +485,7 @@ int infx_mod(FILE *source, FILE *dest) {
 int main(int argc, char** argv) {
 	//char output_fn[100];
 
-	//emma("test_data.txt", "comp.zl", 2);
+	//emma("loss_test.txt", "emma.zl", 2);
 
 	/*FILE* fp, *fpo;
 	fp = fopen("test2.txt", "r");//"test_data.txt"
@@ -493,8 +493,8 @@ int main(int argc, char** argv) {
 	defx2(fp, fpo);*/
 
 	FILE* fp, *fpo;
-	fp = fopen("output.txt", "r");
-	fpo = fopen("output.txt.uc", "w");
+	fp = fopen("emma.zl", "r");
+	fpo = fopen("__test.c", "w");
 	infx_mod(fp, fpo);
 	//infx(fp, fpo);
 	//infx(fp, fpo);
