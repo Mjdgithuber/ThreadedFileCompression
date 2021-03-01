@@ -18,7 +18,7 @@ This is a very basic program that can compress and decompress a file with a conf
 To run the program you need to specify whether you want to compress or decompress a file, this is specified with -c and -d respectively.
 
 ### For Compression
-`./a.out -c file_to_compress #_of_threads`
+`./a.out -c file_to_compress #_of_threads` - This will output the compressed data to file_to_compress.zl
 
 ### For Decompression
-`./a.out -d file_to_decompress.zl`
+`./a.out -d file_to_decompress.zl` This will output the decompressed data to file_to_decompress.zl.uc
