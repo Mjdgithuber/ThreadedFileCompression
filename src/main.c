@@ -6,7 +6,8 @@
 #include <sys/time.h>
 #include "zlib/zlib.h"
 
-#define CHUNK_SIZE 4096
+#define CHUNK_SIZE 4096 /* size of each block to be compressed */
+#define CHUNK 16384     /* arbitrary size of decompression read */
 
 /* ZLib 'hack' for OS compatibility */
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
@@ -23,7 +24,7 @@ typedef unsigned char BYTE;
 int def(BYTE* buffer_in, unsigned int buff_in_sz, BYTE* buffer_out, unsigned int buff_out_sz, unsigned int* output_sz);
 void deflate_file(const char* input_fn, const char* output_fn, int n_workers);
 int inflate_file(FILE *source, FILE *dest);
-void* compression(void* comp_info);
+void* compression(void* thread);
 
 /* Hold info about a worker thread */
 typedef struct {
@@ -161,7 +162,6 @@ void deflate_file(const char* input_fn, const char* output_fn, int n_workers) {
 	free(workers);
 }
 
-#define CHUNK 16384
 int inflate_file(FILE *source, FILE *dest) {
 	int ret;
 	unsigned have;
