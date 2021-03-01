@@ -21,7 +21,8 @@ typedef unsigned char BYTE;
 
 /* Protos */
 int def(BYTE* buffer_in, unsigned int buff_in_sz, BYTE* buffer_out, unsigned int buff_out_sz, unsigned int* output_sz);
-
+void deflate_file(const char* input_fn, const char* output_fn, int n_workers);
+int inflate_file(FILE *source, FILE *dest);
 void* compression(void* comp_info);
 
 /* Hold info about a worker thread */
@@ -88,7 +89,7 @@ void* compression(void* thread) {
 	return NULL;
 }
 
-void emma(const char* input_fn, const char* output_fn, int n_workers) {
+void deflate_file(const char* input_fn, const char* output_fn, int n_workers) {
 	FILE *i_fp, *o_fp;
 	int i;
 	worker_t* workers = calloc(n_workers, sizeof(worker_t));
@@ -161,7 +162,7 @@ void emma(const char* input_fn, const char* output_fn, int n_workers) {
 }
 
 #define CHUNK 16384
-int infx_mod(FILE *source, FILE *dest) {
+int inflate_file(FILE *source, FILE *dest) {
 	int ret;
 	unsigned have;
 	z_stream strm;
@@ -245,13 +246,15 @@ int main(int argc, char** argv) {
 			return 0;
 		}
 		strcat(output_fn, ".zl");
-		emma(argv[2], output_fn, atoi(argv[3]));
+		deflate_file(argv[2], output_fn, atoi(argv[3]));
 	} else if(!strcmp(argv[1], "-d")) {
 		FILE* fp, *fpo;
 		strcat(output_fn, ".uc");
 		fp = fopen(argv[2], "r");
 		fpo = fopen(output_fn, "w");
-		infx_mod(fp, fpo);
+		inflate_file(fp, fpo);
+		fclose(fp);
+		fclose(fpo);
 	} else {
 		printf("Second arg must be either -c or -d\n");
 		return 0;
