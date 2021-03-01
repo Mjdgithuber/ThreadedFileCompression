@@ -24,6 +24,18 @@ int def(BYTE* buffer_in, unsigned int buff_in_sz, BYTE* buffer_out, unsigned int
 
 void* compression(void* comp_info);
 
+/* Hold info about a worker thread */
+typedef struct {
+	pthread_t thread;
+	char alive; /* 0 - idle, 1 - running, 2 - need to be reset */
+
+	BYTE* input_buf;
+	BYTE* output_buf;
+	unsigned output_size; /* in bytes */
+	unsigned input_size;
+	int block_id; /* to maintain order */
+} worker_t;
+
 
 /* Compress bytes from buffer source to buffer dest.
  *    def() returns Z_OK on success, Z_MEM_ERROR if memory could not be
@@ -32,7 +44,7 @@ void* compression(void* comp_info);
  *             version of the library linked do not match. 
  * Params:
  * buffer_in  - A buffer of uncompressed bytes
- * buff_in_sz - # of bytes to compress (must be multiple of cache line size)
+ * buff_in_sz - # of bytes to compress
  * buffer_out - A buffer to write compressed data to
  * output_sz  - Place to store # of compressed bytes */
 int def(BYTE* buffer_in, unsigned int buff_in_sz, BYTE* buffer_out, unsigned int buff_out_sz, unsigned int* output_sz) {
@@ -51,43 +63,21 @@ int def(BYTE* buffer_in, unsigned int buff_in_sz, BYTE* buffer_out, unsigned int
 	strm.avail_in = buff_in_sz; /* # of avail bytes */
 	strm.next_in  = buffer_in;  /* ptr to first byte of data */
 	
-	/*printf("Uncompressed Size: %d, first char: %c\n", buff_in_sz, *buffer_in);*/
-	
 	strm.avail_out = buff_out_sz; /* size of output buff */
-	strm.next_out  = buffer_out;      /* ptr to first byte of o buff */
+	strm.next_out  = buffer_out;  /* ptr to first byte of o buff */
 	    
 	ret = deflate(&strm, Z_FINISH); /* no bad return value */
 	assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
 	    
-	have = buff_out_sz - strm.avail_out;
-	//printf("Compressed Size: %d\n", have);
-	    
-	/* 1 byte needed for 0 byte filler metadata */
-	if(strm.avail_out == 0) {
-		(void)deflateEnd(&strm);
-		printf("Not enough room in output buffer!\n");
-		return -1;
-	}
-	
+	have = buff_out_sz - strm.avail_out;	
 
-	assert(strm.avail_in == 0); /* all input will be used */
+	assert(strm.avail_in == 0); /* all input must be used */
 	(*output_sz) = have;
 
 	/* clean up and return */
 	(void)deflateEnd(&strm);
 	return Z_OK;
-} 
-
-typedef struct {
-	pthread_t thread;
-	char alive; /* 0 - idle, 1 - running, 2 - need to be reset */
-
-	BYTE* input_buf;
-	BYTE* output_buf;
-	int output_size; /* in bytes */
-	int block_id; /* to maintain order */
-	int input_size;
-} worker_t;
+}
 
 void* compression(void* thread) {
 	worker_t* worker = (worker_t*) thread;
@@ -266,40 +256,6 @@ int main(int argc, char** argv) {
 		printf("Second arg must be either -c or -d\n");
 		return 0;
 	}
-
-
-	//!strcmp(str, v_flags[i])
-
-	//emma("b_exe.test", "emma.zl", 2);
-
-	/*FILE* fp, *fpo;
-	fp = fopen("test2.txt", "r");//"test_data.txt"
-	fpo = fopen("output.txt", "w");
-	defx2(fp, fpo);*/
-
-	/*FILE* fp, *fpo;
-	fp = fopen("emma.zl", "r");
-	fpo = fopen("__test.w", "w");
-	infx_mod(fp, fpo);*/
-
-	//infx(fp, fpo);
-	//infx(fp, fpo);
-
-	
-
-	/*FILE* fp;
-	fp = fopen("comp.zl", "r");
-	BYTE* ib = malloc(208);
-	BYTE* ob = malloc(1000);
-	fread(ib, 186, 1, fp);
-	int sz = 0;
-	inf(ib, 186*2, ob, 1000, &sz);
-	printf("Inf size %d\n", sz);
-	fclose(fp);
-
-	free(ib);
-	free(ob);*/
-
 
 	return 0;
 }
