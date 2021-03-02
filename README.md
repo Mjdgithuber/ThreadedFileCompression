@@ -22,3 +22,9 @@ To run the program you need to specify whether you want to compress or decompres
 
 ### For Decompression
 `./a.out -d file_to_decompress.zl` This will output the decompressed data to file_to_decompress.zl.uc
+
+## Results
+| # File              | 1 Thread      | 1 Threads    | 1 Threads    | 1 Threads    | 1 Threads    | 1 Threads    |
+| -------------       | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
+| 5.3G Text & Numbers | 4:26 Minutes  | 2:37 Minutes | 1:39 Minutes | 1:21 Minutes | 1:12 Minutes | 1:06 Minutes |
+| 4.1G Text           | 2:46 Minutes | 1:40 Minutes | 1:13 Minutes | 1:01 Minutes | 55 Seconds | 49 Seconds |
