@@ -15,11 +15,11 @@ function to decompress the enetire file without having to worry about the compre
 
 ## How to Build
 1. Clone this repo
-2. Navigate to the zlib directory and run `make` followed by `make install` to build zlib
+2. If you have make installed navigate to the zlib directory and run `make` followed by `make install` to build zlib
 3. Go back to the src directory and run `gcc main.c zlib/libz.a -lpthread -Wall`
+4. If you don't have make installed you can run `gcc main.c -lpthread -Wall -lz` (assuming you have zlib installed)
 
-**Note** if you don't have `make` installed please contact me @ dennem@rpi.edu to get the library to build for your system.  You can also try adding `-lz` to gcc command if
-you would prefer to avoid building zlib. I'm exporting zlib as a static library file `.a` extension for Unix based systems (for archive).  This will likely have issues on non-Linux based systems.
+**Note** You can also try adding `-lz` to gcc command if you would prefer to avoid building zlib. Here I'm exporting zlib as a static library file `.a` extension for Unix based systems (for archive).  This will likely have issues on non-Linux based systems.
 
 ## Running
 To run the program you need to specify whether you want to compress or decompress a file, this is specified with -c and -d respectively.
